@@ -1,0 +1,1695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>نظام عروض أسعار UKRA</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* =================================
+       1. الإعدادات العامة وتصميم الواجهة
+       ================================= */
+    :root {
+      --ukra-gold: #C9A86A;
+      --ukra-dark: #0f0f10;
+      --ukra-dark-2: #222;
+      --font-body: 'Cairo', sans-serif;
+      --font-title: 'Playfair Display', serif;
+    }
+    body {
+      font-family: var(--font-body);
+      background: #f0f2f5;
+      color: #333;
+      margin: 0;
+      padding: 0;
+    }
+    .main-container {
+      max-width: 1400px;
+      margin: 20px auto;
+      padding: 15px;
+    }
+    h1, h2, h3 {
+      font-family: var(--font-title);
+      color: var(--ukra-dark);
+    }
+
+    /* --- تصميم التبويبات (Tabs) --- */
+    .tabs {
+      display: flex;
+      background: #fff;
+      border-radius: 8px 8px 0 0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+    .tab-button {
+      padding: 15px 25px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      border-bottom: 3px solid transparent;
+      color: #777;
+    }
+    .tab-button.active {
+      color: var(--ukra-gold);
+      border-bottom-color: var(--ukra-gold);
+    }
+    .tab-content {
+      display: none;
+      background: #fff;
+      padding: 25px;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+    .tab-content.active {
+      display: block;
+    }
+
+    /* --- تصميم الفورم والأكورديون --- */
+    .form-section {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    .form-section-header {
+      background: #f9f9f9;
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .form-section-body {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input[type="text"], input[type="date"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      box-sizing: border-box;
+    }
+    textarea {
+      height: 100px;
+      grid-column: 1 / -1; /* جعلها تمتد على عرض الفورم */
+    }
+    
+    /* --- تصميم الأكورديون (Accordion) --- */
+    .accordion-group {
+      border-bottom: 1px solid #eee;
+    }
+    .accordion-header {
+      background: #fdfdfd;
+      padding: 15px 20px;
+      cursor: pointer;
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .accordion-header:hover {
+      background: #f5f5f5;
+    }
+    .accordion-body {
+      display: none; /* مخفي افتراضياً */
+      padding: 15px;
+    }
+    .item-selection-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 10px;
+    }
+    .item-label {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      border-radius: 4px;
+      background: #f9f9f9;
+      cursor: pointer;
+    }
+    .item-label input[type="checkbox"] {
+      margin-left: 10px;
+      width: 18px;
+      height: 18px;
+    }
+    .item-label:hover {
+      background: #eef;
+    }
+    
+    /* --- تصميم جدول البنود (للتعديل) --- */
+    .quote-table-wrapper {
+      overflow-x: auto;
+    }
+    .quote-items-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .quote-items-table th, .quote-items-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+      text-align: right;
+    }
+    .quote-items-table th {
+      background: #f4f4f4;
+      font-family: var(--font-title);
+    }
+    .quote-items-table input[type="text"], 
+    .quote-items-table input[type="number"] {
+      width: 95%;
+      padding: 8px;
+    }
+    .quote-items-table .item-desc-input {
+      width: 98%;
+      font-size: 0.9rem;
+    }
+    .quote-items-table .item-qty-input {
+      width: 80px;
+    }
+    
+    /* --- تصميم سجل العروض --- */
+    .log-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .log-table th, .log-table td {
+      border: 1px solid #ddd;
+      padding: 12px;
+    }
+    .log-table tr:hover {
+      background: #f9f9f9;
+    }
+    
+    /* --- الأزرار --- */
+    .button {
+      background: var(--ukra-gold);
+      color: var(--ukra-dark);
+      padding: 12px 20px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+      margin: 10px 5px;
+      font-family: var(--font-body);
+    }
+    .button:hover { background: #b08f51; }
+    .btn-save { background: #28a745; color: white; }
+    .btn-save:hover { background: #218838; }
+    .btn-preview { background: #007bff; color: white; }
+    .btn-preview:hover { background: #0056b3; }
+    .btn-danger { background: #dc3545; color: white; padding: 5px 10px; font-size: 12px; }
+    
+    /* --- شاشة التحميل --- */
+    #loader {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(255, 255, 255, 0.8);
+      z-index: 9998;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--ukra-dark);
+    }
+    #statusMessage {
+      text-align: center;
+      padding: 15px;
+      font-size: 1.1rem;
+      margin-top: 10px;
+      border-radius: 4px;
+      display: none;
+    }
+    .status-success { background: #d4edda; color: #155724; }
+    .status-error { background: #f8d7da; color: #721c24; }
+  </style>
+</head>
+<body>
+
+  <div class="main-container">
+    
+    <div id="loader">جاري التحميل...</div>
+    
+    <div id="statusMessage"></div>
+
+    <nav class="tabs">
+      <div id="tab-creator" class="tab-button active" onclick="switchTab('creator')">إنشاء / تعديل عرض</div>
+      <div id="tab-log" class="tab-button" onclick="switchTab('log')">سجل عروض الأسعار</div>
+    </nav>
+
+    <div id="creator-view" class="tab-content active">
+      
+      <div class="form-section">
+        <div class="form-section-header"><h2>1. المعلومات الأساسية</h2></div>
+        <div class="form-section-body">
+          
+          <input type="hidden" id="currentQuoteId">
+          <input type="hidden" id="currentQuoteRowIndex">
+          
+          <div class="form-group">
+            <label for="hotelName">اسم الفندق:</label>
+            <input type="text" id="hotelName" placeholder="إدارة فندق ...." onchange="saveDraft()">
+          </div>
+          <div class="form-group">
+            <label for="quoteDate">التاريخ:</label>
+            <input type="date" id="quoteDate" onchange="saveDraft()">
+          </div>
+          <div class="form-group">
+            <label for="coverImage">رابط صورة الغلاف (اختياري):</label>
+            <input type="text" id="coverImage" placeholder="https://example.com/image.png" onchange="saveDraft()">
+          </div>
+          <div class="form-group" style="grid-column: 1 / -1;">
+            <label for="designDescription">وصف التصميم (سيظهر في صفحة "وصف التصميم"):</label>
+            <textarea id="designDescription" onchange="saveDraft()">إستقبال وغرف فندقية ومنطقة طعام بتكلفة متوسطة، تجمع بين الراحة والجمال، بألوان متوازنة بين الفاتح والغامق.</textarea>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="form-section">
+        <div class="form-section-header"><h2>✨ مساعد الذكاء الاصطناعي (الاختيار الذكي)</h2></div>
+        <div class="form-section-body" style="display: block; padding: 20px;">
+          <p>اطلب من الذكاء الاصطناعي ملء الجدول بالبنود المقترحة. (سيتم إضافة البنود إلى القائمة الحالية).</p>
+          <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+            <button type="button" class="button" style="background: #4a90e2;" onclick="generateAiSelection('economy_room')">
+              🛏️ إنشاء غرفة اقتصادية
+            </button>
+            <button type="button" class="button" style="background: #50e3c2;" onclick="generateAiSelection('medium_room')">
+              🛏️ إنشاء غرفة متوسطة
+            </button>
+            <button type="button" class="button" style="background: #b8e986;" onclick="generateAiSelection('luxury_reception')">
+              🛋️ إنشاء استقبال فاخر
+            </button>
+            </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header"><h2>2. اختيار البنود</h2></div>
+        <div class="form-section-body" style="display: block;">
+          <div class="form-group">
+            <label for="priceLevel">اختر مستوى السعر الافتراضي للبنود:</label>
+            <select id="priceLevel">
+              <option value="price_medium">متوسط (جودة جيدة)</option>
+              <option value="price_low">منخفض (اقتصادي)</option>
+              <option value="price_high">مرتفع (فاخر)</option>
+            </select>
+          </div>
+          
+          <div id="item-accordion">
+            <p>جاري تحميل البنود...</p>
+          </div>
+          
+          <button type="button" class="button" onclick="addSelectedItems()">+ إضافة البنود المحددة</button>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header"><h2>3. البنود المضافة (قابلة للتعديل)</h2></div>
+        <div class="form-section-body" style="display: block;">
+          <div class="quote-table-wrapper">
+            <table class="quote-items-table">
+              <thead>
+                <tr>
+                  <th style="width: 15%;">القسم</th>
+                  <th>الصنف والمواصفات (قابل للتعديل)</th>
+                  <th style="width: 8%;">الكمية</th>
+                  <th style="width: 12%;">سعر الوحدة</th>
+                  <th style="width: 12%;">الإجمالي</th>
+                  <th style="width: 5%;">حذف</th>
+                </tr>
+              </thead>
+              <tbody id="quoteItemsBody">
+                </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-section">
+        <div class="form-section-header"><h2>4. معلومات إضافية (تظهر في المعاينة)</h2></div>
+        <div class="form-section-body">
+          <div class="form-group">
+            <label for="notes">ملاحظات (تظهر تحت الإجمالي):</label>
+            <textarea id="notes" placeholder="اكتب هنا الشروط الإضافية..." onchange="saveDraft()">- الأسعار تشمل التصميم، التصنيع، والنقل والتركيب داخل المدينة.
+- الأسعار لا تشمل الضريبة المضافة .
+- جميع القطع مصنوعة من خشب عالي الجودة بقشرة طبيعية وأقمشة فندقية مقاومة للبقع.
+- العرض ساري لمدة 30 يومًا من تاريخ الإصدار.</textarea>
+          </div>
+          <div class="form-group">
+            <label for="bankDetails">معلومات البنك (تظهر في الخاتمة):</label>
+            <textarea id="bankDetails" placeholder="اكتب هنا معلومات الحساب البنكي..." onchange="saveDraft()">اسم البنك:
+رقم الحساب:
+الآيبان:</textarea>
+          </div>
+        </div>
+      </div>
+      
+      <div class="form-section">
+        <div class="form-section-header"><h2>5. الإجمالي والخصم</h2></div>
+        <div class="form-section-body" style="display: block; padding: 20px;">
+          <div class="totals-section" style="grid-template-columns: 1fr 1fr;">
+            <div class="form-group">
+              <label for="discountPercent">نسبة الخصم (%):</label>
+              <input type="number" id="discountPercent" min="0" max="10" value="0" step="0.5" onchange="updateGrandTotal(); saveDraft();">
+            </div>
+            <div>
+              <div class="totals-display">
+                <span>الإجمالي الفرعي:</span>
+                <span id="subTotalDisplay">0.00 ريال</span>
+              </div>
+              <div class="totals-display">
+                <span>قيمة الخصم:</span>
+                <span id="discountAmountDisplay">0.00 ريال</span>
+              </div>
+              <hr>
+              <div class="totals-display" style="color: var(--ukra-gold); font-size: 1.5rem;">
+                <span>الإجمالي النهائي:</span>
+                <span id="grandTotalDisplay">0.00 ريال</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: left; border-top: 1px solid #eee; padding-top: 20px;">
+        <button type="button" class="button" onclick="resetForm()">
+          🔄 عرض جديد
+        </button>
+        <button type="button" class="button btn-save" onclick="saveQuote()">
+          💾 حفظ (جديد/تعديل)
+        </button>
+        <button type="button" class="button btn-preview" onclick="generatePreview()">
+          📄 معاينة وطباعة
+        </button>
+      </div>
+
+    </div>
+
+    <div id="log-view" class="tab-content">
+      <h2>سجل عروض الأسعار المحفوظة</h2>
+      <p>اضغط على "تحميل وتعديل" لفتح عرض السعر في التبويب الأول.</p>
+      <div class="quote-table-wrapper">
+        <table class="log-table">
+          <thead>
+            <tr>
+              <th>رقم العرض (ID)</th>
+              <th>اسم الفندق</th>
+              <th>التاريخ</th>
+              <th>الإجمالي</th>
+              <th>تحكم</th>
+            </tr>
+          </thead>
+          <tbody id="log-table-body">
+            </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ================== الإعدادات العامة ==================
+    
+    // !! هام جداً: ضع هنا رابط الـ Web App المنشور من Code.gs !!
+    const GAS_URL = 'https://script.google.com/macros/s/AKfycbweqzd5vUDG0T3WwuaJM3BqFAOhL6VvkeYMVlJ2ST8dLogkSbhAph_fYOmWKBraPjrvMg/exec';
+    
+    // متغيرات الحالة العامة
+    let MASTER_ITEMS_LIST = [];
+    let CURRENT_QUOTE = {
+      quoteId: null,
+      rowIndex: null,
+      items: [] // هذا سيحمل البنود في الجدول
+    };
+    
+    // عناصر الواجهة الرئيسية
+    const loader = document.getElementById('loader');
+    const statusMsg = document.getElementById('statusMessage');
+    const hotelNameEl = document.getElementById('hotelName');
+    const quoteDateEl = document.getElementById('quoteDate');
+    const designDescEl = document.getElementById('designDescription');
+    const notesEl = document.getElementById('notes');
+    const bankDetailsEl = document.getElementById('bankDetails');
+    const discountPercentEl = document.getElementById('discountPercent');
+    const quoteItemsBodyEl = document.getElementById('quoteItemsBody');
+    const currentQuoteIdEl = document.getElementById('currentQuoteId');
+    const currentQuoteRowIndexEl = document.getElementById('currentQuoteRowIndex');
+    const coverImageEl = document.getElementById('coverImage'); // إضافة عنصر صورة الغلاف
+
+    // ================== تهيئة التطبيق ==================
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // 1. ضبط التاريخ الافتراضي
+      quoteDateEl.valueAsDate = new Date();
+      
+      // 2. بدء جلب البيانات
+      showLoader(true, 'جاري تحميل بيانات النظام...');
+      fetchMasterItems();
+      fetchQuoteLog();
+      
+      // 3. تحميل المسودة إن وجدت
+      loadDraft();
+    });
+
+    /**
+     * جلب البنود الرئيسية من الشيت
+     */
+    function fetchMasterItems() {
+      const callbackName = 'jsonp_items_' + Date.now();
+      const script = document.createElement('script');
+      script.src = `${GAS_URL}?action=getMasterItems&callback=${callbackName}`;
+      
+      window[callbackName] = (response) => {
+        if (response.status === 'success') {
+          MASTER_ITEMS_LIST = response.data;
+          renderAccordion();
+          showLoader(false);
+        } else {
+          onDataFailed(response.message);
+        }
+        document.body.removeChild(script);
+        delete window[callbackName];
+      };
+      
+      script.onerror = () => onDataFailed('فشل الاتصال بخادم البنود');
+      document.body.appendChild(script);
+    }
+    
+    /**
+     * جلب سجل العروض المحفوظة
+     */
+    function fetchQuoteLog() {
+      const callbackName = 'jsonp_log_' + Date.now();
+      const script = document.createElement('script');
+      script.src = `${GAS_URL}?action=getQuotesList&callback=${callbackName}`;
+      
+      window[callbackName] = (response) => {
+        if (response.status === 'success') {
+          renderLogTable(response.data);
+          showLoader(false);
+        } else {
+          onDataFailed(response.message);
+        }
+        document.body.removeChild(script);
+        delete window[callbackName];
+      };
+      
+      script.onerror = () => onDataFailed('فشل الاتصال بسجل العروض');
+      document.body.appendChild(script);
+    }
+
+    // ================== دوال رسم الواجهة ==================
+
+    /**
+     * رسم الأكورديون (واجهة اختيار البنود)
+     */
+    function renderAccordion() {
+      const accordionContainer = document.getElementById('item-accordion');
+      accordionContainer.innerHTML = '';
+      
+      const categories = {};
+      MASTER_ITEMS_LIST.forEach(item => {
+        if (!categories[item.category]) categories[item.category] = [];
+        categories[item.category].push(item);
+      });
+
+      for (const category in categories) {
+        let itemsHtml = '';
+        categories[category].forEach(item => {
+          itemsHtml += `
+            <label class="item-label">
+              <input type="checkbox" class="item-select-checkbox" data-item-id="${item.id}">
+              <div>
+                <strong>${item.name}</strong><br>
+                <small>${item.description}</small>
+              </div>
+            </label>
+          `;
+        });
+        
+        accordionContainer.innerHTML += `
+          <div class="accordion-group">
+            <div class="accordion-header" onclick="toggleAccordion(this)">
+              <span>${category}</span>
+              <span>+</span>
+            </div>
+            <div class="accordion-body">
+              <div class="item-selection-grid">${itemsHtml}</div>
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    /**
+     * رسم جدول سجل العروض
+     */
+    function renderLogTable(quotes) {
+      const logBody = document.getElementById('log-table-body');
+      logBody.innerHTML = '';
+      if (quotes.length === 0) {
+        logBody.innerHTML = '<tr><td colspan="5">لا توجد عروض محفوظة.</td></tr>';
+        return;
+      }
+      
+      quotes.forEach(quote => {
+        const row = logBody.insertRow();
+        row.innerHTML = `
+          <td>${quote.quoteId}</td>
+          <td>${quote.hotelName}</td>
+          <td>${new Date(quote.quoteDate).toLocaleDateString('ar-SA')}</td>
+          <td>${parseFloat(quote.grandTotal).toFixed(2)} ريال</td>
+          <td>
+            <button class="button" style="padding: 8px 12px;" onclick="loadQuoteForEdit('${quote.quoteId}')">
+              تحميل وتعديل
+            </button>
+          </td>
+        `;
+      });
+    }
+
+    /**
+     * رسم جدول البنود في عرض السعر (عند تحميل عرض قديم أو مسودة)
+     */
+    function renderQuoteItemsTable(items) {
+      quoteItemsBodyEl.innerHTML = '';
+      CURRENT_QUOTE.items = []; // تفريغ الحالة
+      
+      items.forEach(item => {
+        // إضافة البند إلى الجدول وإلى الحالة
+        addQuoteItem(item); 
+      });
+      updateGrandTotal();
+    }
+    
+    // ================== دوال التحكم بالواجهة ==================
+    
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(`${tabName}-view`).classList.add('active');
+      document.getElementById(`tab-${tabName}`).classList.add('active');
+    }
+    
+    function toggleAccordion(headerElement) {
+      const body = headerElement.nextElementSibling;
+      const indicator = headerElement.querySelector('span:last-child');
+      
+      if (body.style.display === "block") {
+        body.style.display = "none";
+        indicator.innerText = "+";
+      } else {
+        body.style.display = "block";
+        indicator.innerText = "-";
+      }
+    }
+
+    /**
+     * إضافة البنود المحددة من الأكورديون إلى الجدول
+     */
+    function addSelectedItems() {
+      const selectedCheckboxes = document.querySelectorAll('.item-select-checkbox:checked');
+      const priceLevel = document.getElementById('priceLevel').value;
+      
+      selectedCheckboxes.forEach(box => {
+        const itemId = box.dataset.itemId;
+        const itemData = MASTER_ITEMS_LIST.find(item => item.id === itemId);
+        
+        if (itemData) {
+          const unitPrice = itemData[priceLevel] || 0;
+          
+          addQuoteItem({
+            category: itemData.category,
+            name: itemData.name,
+            description: itemData.description,
+            quantity: 1,
+            unitPrice: unitPrice,
+            totalPrice: unitPrice
+          });
+        }
+        box.checked = false; // إلغاء التحديد
+      });
+      
+      updateGrandTotal();
+      saveDraft(); // حفظ المسودة بعد الإضافة
+    }
+    
+    /**
+     * دالة مركزية لإضافة صف (سواء من الأكورديون أو عند تحميل عرض)
+     */
+    function addQuoteItem(item) {
+      // 1. إضافة للمتغير العام
+      CURRENT_QUOTE.items.push(item);
+      
+      // 2. إضافة للجدول (HTML)
+      const row = quoteItemsBodyEl.insertRow();
+      row.className = 'quote-item-row';
+      const index = CURRENT_QUOTE.items.length - 1; // معرف الصف
+      row.dataset.index = index;
+      
+      row.innerHTML = `
+        <td>
+          <input type="text" value="${item.category}" onchange="updateItemField(${index}, 'category', this.value)">
+        </td>
+        <td>
+          <strong>${item.name}</strong><br>
+          <textarea class="item-desc-input" onchange="updateItemField(${index}, 'description', this.value)">${item.description}</textarea>
+        </td>
+        <td>
+          <input type="number" class="item-qty-input" value="${item.quantity}" min="1" onchange="updateItemField(${index}, 'quantity', this.value)">
+        </td>
+        <td>
+          <input type="number" class="item-unit-price" value="${item.unitPrice}" step="any" onchange="updateItemField(${index}, 'unitPrice', this.value)">
+        </td>
+        <td>
+          <input type="text" class="item-row-total" value="${(item.quantity * item.unitPrice).toFixed(2)}" readonly style="background:#f0f0f0; border:none;">
+        </td>
+        <td class="no-print">
+          <button type="button" class="btn-danger" onclick="deleteRow(this, ${index})">X</button>
+        </td>
+      `;
+    }
+    
+    // ================== دوال الحساب والتعديل ==================
+    
+    /**
+     * تحديث بيانات البند في المتغير العام (عند تعديل الحقل)
+     */
+    function updateItemField(index, fieldName, value) {
+      const item = CURRENT_QUOTE.items[index];
+      if (item) {
+        item[fieldName] = value;
+        
+        if (fieldName === 'quantity' || fieldName === 'unitPrice') {
+          item.totalPrice = (item.quantity * item.unitPrice).toFixed(2);
+          const row = quoteItemsBodyEl.querySelector(`tr[data-index="${index}"]`);
+          if (row) {
+            row.querySelector('.item-row-total').value = item.totalPrice;
+          }
+          updateGrandTotal();
+        }
+      }
+      saveDraft(); // حفظ المسودة عند أي تعديل
+    }
+    
+    /**
+     * حذف صف (من الجدول ومن المتغير العام)
+     */
+    function deleteRow(button, index) {
+      button.closest('tr').remove();
+      CURRENT_QUOTE.items[index] = null; // نضع null للحفاظ على الفهارس
+      updateGrandTotal();
+      saveDraft(); // حفظ المسودة بعد الحذف
+    }
+    
+    /**
+     * تحديث كل الإجماليات والخصم
+     */
+    function updateGrandTotal() {
+      let subTotal = 0;
+      
+      CURRENT_QUOTE.items.forEach(item => {
+        if (item) { // نتجاهل البنود المحذوفة (null)
+          subTotal += parseFloat(item.totalPrice) || 0;
+        }
+      });
+      
+      let discountPercent = parseFloat(discountPercentEl.value) || 0;
+      if (discountPercent < 0) {
+        discountPercent = 0;
+        discountPercentEl.value = 0;
+      }
+      
+      let discountAmount = (subTotal * discountPercent) / 100;
+      const grandTotal = subTotal - discountAmount;
+      
+      document.getElementById('subTotalDisplay').innerText = subTotal.toFixed(2) + ' ريال';
+      document.getElementById('discountAmountDisplay').innerText = discountAmount.toFixed(2) + ' ريال';
+      document.getElementById('grandTotalDisplay').innerText = grandTotal.toFixed(2) + ' ريال';
+    }
+
+    /**
+     * إعادة تعيين الفورم بالكامل
+     */
+    function resetForm() {
+      if (!confirm('هل أنت متأكد؟ سيتم حذف جميع البيانات غير المحفوظة.')) return;
+      
+      clearDraft(); // حذف المسودة
+      
+      CURRENT_QUOTE = { quoteId: null, rowIndex: null, items: [] };
+      
+      hotelNameEl.value = '';
+      quoteDateEl.valueAsDate = new Date();
+      coverImageEl.value = '';
+      designDescEl.value = 'إستقبال وغرف فندقية...';
+      notesEl.value = '- الأسعار لا تشمل...\n- العرض ساري...';
+      bankDetailsEl.value = 'اسم البنك:...\nالآيبان:...';
+      discountPercentEl.value = 0;
+      quoteItemsBodyEl.innerHTML = '';
+      currentQuoteIdEl.value = '';
+      currentQuoteRowIndexEl.value = '';
+      
+      updateGrandTotal();
+      switchTab('creator');
+      showStatus('تم إعادة تعيين الفورم.', 'success');
+    }
+
+    // ================== دوال الحفظ والتحميل (Sheet) ==================
+    
+    /**
+     * تحميل عرض سعر قديم للتعديل
+     */
+    function loadQuoteForEdit(quoteId) {
+      showLoader(true, `جاري تحميل العرض ${quoteId}...`);
+      
+      const callbackName = 'jsonp_load_' + Date.now();
+      const script = document.createElement('script');
+      script.src = `${GAS_URL}?action=getQuoteDetails&quoteId=${quoteId}&callback=${callbackName}`;
+      
+      window[callbackName] = (response) => {
+        if (response.status === 'success') {
+          const quote = response.data;
+          
+          hotelNameEl.value = quote.hotelName;
+          quoteDateEl.value = new Date(quote.quoteDate).toISOString().split('T')[0];
+          coverImageEl.value = quote.coverImage || ''; // تحميل صورة الغلاف
+          designDescEl.value = quote.designDescription;
+          notesEl.value = quote.notes || '';
+          bankDetailsEl.value = quote.bankDetails || '';
+          discountPercentEl.value = quote.discountPercent || 0;
+          
+          currentQuoteIdEl.value = quote.quoteId;
+          currentQuoteRowIndexEl.value = response.rowIndex;
+          
+          renderQuoteItemsTable(quote.items);
+          
+          switchTab('creator');
+          showLoader(false);
+          showStatus(`تم تحميل العرض ${quote.quoteId} بنجاح.`, 'success');
+          
+          // بعد التحميل الناجح، قم بحفظه كمسودة
+          saveDraft();
+          
+        } else {
+          onDataFailed(response.message);
+        }
+        document.body.removeChild(script);
+        delete window[callbackName];
+      };
+      
+      script.onerror = () => onDataFailed('فشل الاتصال بسجل العروض');
+      document.body.appendChild(script);
+    }
+    
+    /**
+     * حفظ (جديد أو تحديث) في Google Sheet
+     */
+    function saveQuote() {
+      if (!hotelNameEl.value.trim()) {
+        alert('يرجى إدخال اسم الفندق.');
+        return;
+      }
+      
+      showLoader(true, 'جاري حفظ عرض السعر...');
+      
+      let subTotal = 0;
+      const finalItems = [];
+      CURRENT_QUOTE.items.forEach(item => {
+        if (item) {
+          subTotal += parseFloat(item.totalPrice) || 0;
+          finalItems.push(item);
+        }
+      });
+      
+      const discountPercent = parseFloat(discountPercentEl.value) || 0;
+      const discountAmount = (subTotal * discountPercent) / 100;
+      const grandTotal = subTotal - discountAmount;
+      
+      const quoteData = {
+        quoteId: currentQuoteIdEl.value || null,
+        rowIndex: currentQuoteRowIndexEl.value || null,
+        hotelName: hotelNameEl.value,
+        quoteDate: quoteDateEl.value,
+        coverImage: coverImageEl.value, // حفظ صورة الغلاف
+        designDescription: designDescEl.value,
+        notes: notesEl.value,
+        bankDetails: bankDetailsEl.value,
+        discountPercent: discountPercent,
+        subTotal: subTotal.toFixed(2),
+        discountAmount: discountAmount.toFixed(2),
+        grandTotal: grandTotal.toFixed(2),
+        items: finalItems
+      };
+      
+      fetch(GAS_URL, {
+        method: 'POST',
+        body: JSON.stringify(quoteData),
+        headers: { 'Content-Type': 'application/json' },
+        mode: 'cors' 
+      })
+      .then(response => response.json())
+      .then(result => {
+        if (result.status === 'success') {
+          showLoader(false);
+          showStatus(result.message, 'success');
+          clearDraft(); // حذف المسودة بعد الحفظ الناجح
+          fetchQuoteLog(); // تحديث السجل
+          currentQuoteIdEl.value = result.quoteId;
+        } else {
+          throw new Error(result.message);
+        }
+      })
+      .catch(error => {
+        showLoader(false);
+        showStatus('فشل الحفظ: ' + error.message, 'error');
+      });
+    }
+
+    // ================== دوال الحفظ المؤقت (Draft) ==================
+
+    const DRAFT_KEY = 'ukraQuoteDraft';
+
+    /**
+     * يحفظ الحالة الحالية للفورم بالكامل في LocalStorage
+     */
+    function saveDraft() {
+      try {
+        const draftData = {
+          hotelName: hotelNameEl.value,
+          quoteDate: quoteDateEl.value,
+          coverImage: coverImageEl.value,
+          designDescription: designDescEl.value,
+          notes: notesEl.value,
+          bankDetails: bankDetailsEl.value,
+          discountPercent: discountPercentEl.value,
+          items: CURRENT_QUOTE.items.filter(item => item) // فلترة البنود المحذوفة
+        };
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draftData));
+      } catch (e) {
+        console.error('فشل حفظ المسودة في LocalStorage:', e);
+      }
+    }
+
+    /**
+     * تحميل المسودة عند فتح الصفحة
+     */
+    function loadDraft() {
+      try {
+        const draftJson = localStorage.getItem(DRAFT_KEY);
+        if (!draftJson) return;
+
+        if (confirm('وجدنا مسودة غير محفوظة. هل تريد استعادتها؟')) {
+          const draft = JSON.parse(draftJson);
+
+          hotelNameEl.value = draft.hotelName || '';
+          quoteDateEl.value = draft.quoteDate || new Date().toISOString().split('T')[0];
+          coverImageEl.value = draft.coverImage || '';
+          designDescEl.value = draft.designDescription || '';
+          notesEl.value = draft.notes || '';
+          bankDetailsEl.value = draft.bankDetails || '';
+          discountPercentEl.value = draft.discountPercent || 0;
+          
+          if (draft.items && draft.items.length > 0) {
+            renderQuoteItemsTable(draft.items);
+          }
+          
+          showStatus('تم استعادة المسودة بنجاح.', 'success');
+        }
+      } catch (e) {
+        console.error('فشل تحميل المسودة من LocalStorage:', e);
+        localStorage.removeItem(DRAFT_KEY); // حذف المسودة الفاسدة
+      }
+    }
+
+    /**
+     * حذف المسودة (عند الحفظ أو الإنشاء الجديد)
+     */
+    function clearDraft() {
+      try {
+        localStorage.removeItem(DRAFT_KEY);
+      } catch (e) {
+        console.error('فشل حذف المسودة:', e);
+      }
+    }
+
+    // ===============================================
+    // == دالة إنشاء نافذة المعاينة (HTML)
+    // ===============================================
+    
+    function generatePreview() {
+      if (!hotelNameEl.value.trim()) {
+        alert('يرجى إدخال اسم الفندق قبل إنشاء المعاينة.');
+        return;
+      }
+      
+      showLoader(true, 'جاري تحضير المعاينة...');
+      
+      // 1. تجميع كل البيانات
+      const data = {
+        hotelName: hotelNameEl.value,
+        quoteDate: new Date(quoteDateEl.value).toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+        designDescription: designDescEl.value.replace(/\n/g, '<br>'),
+        notes: notesEl.value.replace(/\n/g, '<br>'),
+        bankDetails: bankDetailsEl.value.replace(/\n/g, '<br>'),
+        discountPercent: parseFloat(discountPercentEl.value).toFixed(2),
+        subTotal: document.getElementById('subTotalDisplay').innerText,
+        discountAmount: document.getElementById('discountAmountDisplay').innerText,
+        grandTotal: document.getElementById('grandTotalDisplay').innerText,
+        items: CURRENT_QUOTE.items.filter(item => item),
+        coverImage: coverImageEl.value
+      };
+
+      // 2. تجميع البنود حسب القسم
+      const itemsByCategory = {};
+      data.items.forEach(item => {
+        const category = item.category || 'متفرقات';
+        if (!itemsByCategory[category]) {
+          itemsByCategory[category] = [];
+        }
+        itemsByCategory[category].push(item);
+      });
+      
+      // 3. بناء HTML للجداول (المنطق الجديد لتقسيم الصفحات)
+      
+      // !! يمكنك تعديل هذا الرقم ليناسب تصميمك (مثلاً 15 أو 25) !!
+      const MAX_ROWS_PER_PAGE = 7; // حد الصفوف (شاملة العناوين) لكل صفحة جدول
+      
+      let currentPageNumber = 5; // صفحة "جدول الأسعار" تبدأ من 5
+      let itemsHtml = ''; // سيحتوي على كل صفحات الجداول
+      let currentRowCount = 0;
+
+      // دالة لفتح صفحة جديدة
+      function startNewItemPage(isFirstPage = false) {
+        let title = isFirstPage ? 'جدول الأسعار' : 'جدول الأسعار (تابع)';
+        // نفتح الصفحة، وصندوق المحتوى، والجدول، ورأس الجدول
+        return `
+          <div class="page">
+            <div class="content-box">
+              <h1>${title}</h1>
+              <table class="price-table">
+                <thead>
+                  <tr>
+                    <th>الصنف (الوصف والمقاس)</th>
+                    <th class="col-qty">الكمية</th>
+                    <th class="col-unit">سعر الوحدة</th>
+                    <th class="col-total">الإجمالي</th>
+                  </tr>
+                </thead>
+                <tbody>
+        `; // اترك <tbody> مفتوحاً
+      }
+
+      // دالة لإغلاق الصفحة الحالية
+      function closeCurrentItemPage(isLastPage = false) {
+        let pageHtml = '</tbody></table>'; // أغلق الجدول
+        
+        // إذا كانت هذه هي الصفحة الأخيرة من الجداول، أضف الإجماليات والملاحظات
+        if (isLastPage) {
+          pageHtml += `
+            <table class="totals-table">
+              <tbody>
+                <tr>
+                  <td>الإجمالي الفرعي:</td>
+                  <td style="text-align: left;">${data.subTotal}</td>
+                </tr>
+                <tr>
+                  <td>قيمة الخصم (${data.discountPercent}%):</td>
+                  <td style="text-align: left;">${data.discountAmount}</td>
+                </tr>
+                <tr class="grand-total">
+                  <td>الإجمالي النهائي:</td>
+                  <td style="text-align: left;">${data.grandTotal}</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="footer-section">
+              <h2>ملاحظات</h2>
+              <p>${data.notes}</p>
+            </div>
+          `;
+        }
+        
+        pageHtml += `<div class="page-footer">صفحة ${currentPageNumber}</div>`;
+        pageHtml += '</div></div>'; // أغلق .content-box و .page
+        currentPageNumber++; // زيادة رقم الصفحة للصفحة التالية
+        return pageHtml;
+      }
+
+      // --- بداية اللوب الرئيسي ---
+      
+      // 1. ترتيب الفئات (Categories) بناءً على categoryOrder
+      const categoryOrder = [
+        'أثاث منطقة الاستقبال', 'أثاث المطعم', 'أثاث الغرف والأجنحة', 
+        'مناطق الجلوس', 'مكملات الغرفة', 'الكماليات'
+      ];
+      const orderedCategories = [];
+      const remainingCategories = { ...itemsByCategory }; // استنساخ الكائن
+
+      // إضافة الفئات المرتبة أولاً
+      categoryOrder.forEach(catName => {
+        if (remainingCategories[catName]) {
+          orderedCategories.push(catName);
+          delete remainingCategories[catName]; // الحذف من الكائن المستنسخ فقط
+        }
+      });
+      
+      // إضافة الفئات المتبقية
+      for (const catName in remainingCategories) {
+        orderedCategories.push(catName);
+      }
+
+      // 2. افتح الصفحة الأولى
+// --- 2. بداية اللوب الرئيسي الجديد (لبناء الصفحات) ---
+      
+      itemsHtml += startNewItemPage(true); // افتح الصفحة الأولى
+      
+      for (let i = 0; i < orderedCategories.length; i++) {
+        const categoryName = orderedCategories[i];
+        const items = itemsByCategory[categoryName];
+        let categorySubtotal = 0;
+
+        // --- أ. بناء وإضافة رأس القسم ---
+        const categoryHeaderHtml = `
+          <tr class="category-header-row">
+            <th colspan="4" class="category-header">${categoryName}</th>
+          </tr>
+        `;
+        
+        // تحقق: هل "رأس القسم" (1 سطر) يحتاج صفحة جديدة؟
+        if (currentRowCount + 1 > MAX_ROWS_PER_PAGE && currentRowCount > 0) {
+          itemsHtml += closeCurrentItemPage(false); // أغلق الصفحة القديمة
+          itemsHtml += startNewItemPage(false); // ابدأ صفحة جديدة (مع <thead>)
+          currentRowCount = 0;
+        }
+        itemsHtml += categoryHeaderHtml;
+        currentRowCount += 1; // إضافة 1 (رأس القسم) للعداد
+
+        // --- ب. إضافة صفوف البنود (مع التقسيم) ---
+        for (let j = 0; j < items.length; j++) {
+          const item = items[j];
+          const itemTotal = parseFloat(item.totalPrice) || 0;
+          categorySubtotal += itemTotal;
+          
+          const itemRowHtml = `
+            <tr class="item-row">
+              <td><strong>${item.name}</strong><br><small style="color: #555;">${item.description}</small></td>
+              <td class="col-qty">${item.quantity}</td>
+              <td class="col-unit">${parseFloat(item.unitPrice).toFixed(2)}</td>
+              <td class="col-total">${itemTotal.toFixed(2)}</td>
+            </tr>
+          `;
+
+          // تحقق: هل "صف البند" (1 سطر) يحتاج صفحة جديدة؟
+          if (currentRowCount + 1 > MAX_ROWS_PER_PAGE) {
+            itemsHtml += closeCurrentItemPage(false); // أغلق الصفحة القديمة
+            itemsHtml += startNewItemPage(false); // ابدأ صفحة جديدة (مع <thead>)
+            currentRowCount = 0;
+            
+            // !! هام: أعد إضافة رأس القسم في الصفحة الجديدة !!
+            itemsHtml += categoryHeaderHtml; 
+            currentRowCount += 1;
+          }
+          
+          itemsHtml += itemRowHtml;
+          currentRowCount += 1; // إضافة 1 (صف البند) للعداد
+        }
+
+        // --- ج. بناء وإضافة صف الإجمالي الفرعي ---
+        const subtotalRowHtml = `
+          <tr class="subtotal-row">
+            <td colspan="3">الإجمالي الفرعي لقسم: ${categoryName}</td>
+            <td>${categorySubtotal.toFixed(2)}</td>
+          </tr>
+        `;
+
+        // تحقق: هل "صف الإجمالي" (1 سطر) يحتاج صفحة جديدة؟
+        if (currentRowCount + 1 > MAX_ROWS_PER_PAGE) {
+          itemsHtml += closeCurrentItemPage(false); // أغلق الصفحة القديمة
+          itemsHtml += startNewItemPage(false); // ابدأ صفحة جديدة (مع <thead>)
+          currentRowCount = 0;
+          // (لا داعي لرأس القسم هنا، فقط الإجمالي)
+        }
+        
+        itemsHtml += subtotalRowHtml;
+        currentRowCount += 1; // إضافة 1 (صف الإجمالي) للعداد
+      }
+
+      // 3. بعد انتهاء اللوب، أغلق الصفحة الأخيرة
+      itemsHtml += closeCurrentItemPage(true); // true = أضف الإجماليات النهائية
+      
+      // --- نهاية اللوب الرئيسي الجديد ---
+      // --- نهاية اللوب الرئيسي ---
+
+      // 4. بناء الـ HTML الكامل للنافذة الجديدة
+      const previewHtml = `
+        <!DOCTYPE html>
+        <html lang="ar" dir="rtl">
+        <head>
+          <meta charset="UTF-8">
+          <title>معاينة عرض سعر - ${data.hotelName}</title>
+          <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+          <style>
+            /* --- 1. خلفية المتصفح (خلفية "صفحة العرض") --- */
+            body {
+              font-family: 'Cairo', sans-serif;
+              background-color: #ffffff; /* --- أبيض عادي --- */
+              margin: 0;
+              padding: 0;
+            }
+            
+            /* --- 2. هيكل الصفحة (ورقة A4) --- */
+            .page {
+              width: 210mm;
+              height: 297mm; /* --- الحجم الدقيق لـ A4 --- */
+              margin: 15px auto;
+              box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+              page-break-after: always;
+              position: relative;
+              box-sizing: border-box;
+              background-color: #F7F3F0; /* --- بيج/تان فاتح جداً --- */
+              padding: 15mm; 
+            }
+            
+            /* --- 3. صندوق المحتوى (الصندوق الأبيض الداخلي) --- */
+            .content-box {
+              background-color: #ffffff; /* --- صندوق أبيض --- */
+              border-radius: 15px; /* --- حواف دائرية --- */
+              padding: 20mm;
+              width: 100%;
+              height: 100%;
+              box-sizing: border-box;
+              position: relative;
+              overflow: hidden;
+            }
+
+            /* --- 4. تخصيص صفحة الغلاف (Page 1) --- */
+            .cover-page {
+              background-color: #c19577; /* --- لون اللوجو البني --- */
+              background-size: cover;
+              background-position: center;
+              background-repeat: no-repeat;
+              min-height: 100%;
+              color: #ffffff;
+              padding: 0;
+              display: flex;
+              flex-direction: column;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .cover-page::before {
+              content: '';
+              position: absolute;
+              top: 0; left: 0; right: 0; bottom: 0;
+              background: rgba(0, 0, 0, 0.4);
+              z-index: 1;
+            }
+            .cover-page > * {
+              position: relative;
+              z-index: 2;
+            }
+            .cover-logo-ukra {
+              text-align: center;
+            }
+            .cover-footer {
+              padding-bottom: 20mm;
+              font-size: 12pt;
+              color: #ffffff;
+            }
+
+            /* --- 5. إعدادات الطباعة --- */
+            @media print {
+              body, .page {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+              }
+              body {
+                background-color: #ffffff !important;
+              }
+              .page {
+                margin: 0;
+                box-shadow: none;
+                padding: 15mm;
+                height: auto;
+                background-color: #c0ab9c !important;
+              }
+              .content-box {
+                border-radius: 0;
+                /* --- إصلاح الفراغ الأبيض --- */
+                min-height: 267mm; /* 297mm - 15mm - 15mm */
+                background-color: #e7e9d9 !important;
+              }
+              .cover-page {
+                min-height: 297mm;
+                padding: 0;
+                background-color: #c19577 !important;
+              }
+            }
+
+            /* --- 6. تنسيقات المحتوى (العناوين، الجداول، ...) --- */
+            h1 {
+              font-size: 24pt;
+              color: #333;
+              border-bottom: 2px solid #333;
+              padding-bottom: 10px;
+              margin-top: 0;
+              margin-bottom: 30px;
+              page-break-after: avoid;
+            }
+            h2 {
+              font-size: 16pt;
+              color: #C9A86A;
+              margin-top: 25px;
+              margin-bottom: 10px;
+              page-break-after: avoid;
+            }
+            p, li {
+              font-size: 11pt;
+              line-height: 1.6;
+              color: #222;
+            }
+            ul {
+              padding-right: 20px;
+            }
+
+            /* --- رقم الصفحة (داخل content-box) --- */
+            .page-footer {
+              position: absolute;
+              bottom: 15mm;
+              left: 0;
+              width: 100%;
+              text-align: center;
+              color: #999;
+              font-size: 10pt;
+            }
+
+            /* --- تنسيقات الجداول (معالجة الاقتصاص) --- */
+            .price-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 15px;
+              font-size: 9pt;
+              page-break-inside: auto;
+            }
+            .price-table th, .price-table td {
+              border: 1px solid #999;
+              padding: 8px;
+              text-align: right;
+            }
+            .price-table th {
+              background: #f4f4f4;
+              font-weight: bold;
+            }
+            .price-table thead {
+              display: table-header-group; /* تكرار رأس الجدول */
+            }
+            .price-table tr.item-row,
+            .price-table tr.subtotal-row,
+            .price-table tr.category-header-row {
+              page-break-inside: avoid; /* منع انقسام الصف */
+            }
+            .price-table .category-header {
+              background: #f0f0f0;
+              font-size: 12pt;
+              font-weight: bold;
+              color: #333;
+              padding-top: 15px;
+            }
+            .price-table .subtotal-row td {
+              font-weight: bold;
+              background: #f9f9f9;
+            }
+            .price-table .col-qty { width: 8%; }
+            .price-table .col-unit { width: 15%; }
+            .price-table .col-total { width: 15%; }
+
+            .totals-table {
+              width: 50%;
+              margin-right: 0;
+              margin-left: auto;
+              margin-top: 25px;
+              font-size: 11pt;
+              border-collapse: collapse;
+              page-break-inside: avoid;
+            }
+            .totals-table td {
+              padding: 10px;
+              border-bottom: 1px dashed #ccc;
+            }
+            .totals-table .grand-total td {
+              font-size: 1.3rem;
+              font-weight: bold;
+              color: #C9A86A;
+              border-top: 2px solid #333;
+              border-bottom: none;
+            }
+            .footer-section {
+              margin-top: 30px;
+              padding-top: 15px;
+              border-top: 1px solid #eee;
+              font-size: 10pt;
+              white-space: pre-wrap;
+            }
+            .timeline-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 20px;
+              font-size: 11pt;
+              page-break-inside: avoid;
+            }
+            .timeline-table th, .timeline-table td {
+              border: 1px solid #999;
+              padding: 12px;
+            }
+            .timeline-table th { background: #f4f4f4; }
+            .timeline-table .total-row {
+              font-weight: bold;
+              background: #f9f9f9;
+            }
+            
+            /* تنسيقات خاصة باللوجو والعناوين في الغلاف */
+            .cover-title-box { text-align: center; }
+            .cover-title-box h1 {
+              font-size: 48pt;
+              border: none;
+              margin: 0;
+              color: #C9A86A;
+            }
+            .cover-title-box h2 {
+              font-size: 20pt;
+              color: #ffffff;
+              margin: 10px 0;
+            }
+          </style>
+        </head>
+        <body>
+        
+          <div class="page cover-page" style="background-image: url('${data.coverImage}');">
+            <div class="cover-logo-ukra">
+              <img src="UKRA_Logo.png" alt="UKRA Logo" style="width: 200px; max-width: 100%;">
+            </div>
+            
+            <div class="cover-title-box">
+              <h1>عرض سعر</h1>
+              <h2>Hotel Supplies</h2>
+              <h2 style="font-size: 1.5rem; margin-top: 15px;">${data.hotelName}</h2>
+            </div>
+            
+            <div class="cover-footer">
+              التاريخ: ${data.quoteDate}
+            </div>
+          </div>
+          
+          <div class="page">
+            <div class="content-box">
+              <h1>تقديم</h1>
+              <p style="font-weight: bold;">إلى السيد / السيدة : ${data.hotelName}, المحترمين,,,</p>
+              <p>السلام عليكم ورحمة الله وبركاته</p>
+              <p>يُسعدنا في أوكره UKRA أن نتقدم إليكم بعرضنا لتصميم وتصنيع وتوريد غرف النوم الفندقية وفق أعلى معايير الجودة والدقة في التفاصيل.</p>
+              <p>تتميز شركتنا بخبرة واسعة في مجال تصميم وتنفيذ الأثاث الفندقي، بما في ذلك غرف النزلاء، الأجنحة، والمناطق العامة، مع الحرص على المزج بين الأناقة والعملية بما يتناسب مع طابع كل منشأة فندقية.</p>
+              <p>يهدف هذا العرض إلى تقديم حل متكامل لتأثيث غرف النوم الفندقية بمستوى تكلفة متوسط وجودة عالية، باستخدام مواد مختارة بعناية وألوان متوازنة تخلق أجواء راحة وفخامة.</p>
+              <p>نتطلع إلى فرصة التعاون معكم لتحقيق رؤية فندقكم المميزة بأثاث أنيق يدوم طويلاً.</p>
+              
+              <p style="margin-top: 40px; font-weight: bold;">
+                وتفضلوا بقبول فائق الاحترام<br>
+                فريق مبيعات أوكره | UKRA<br>
+                sales@ukra.sa
+              </p>
+              <div class="page-footer">صفحة 2</div>
+            </div>
+          </div>
+          
+          <div class="page">
+            <div class="content-box">
+              <h1>عن الشركة</h1>
+              <p>تأسست أوكره | UKRA منذ 2010 لتكون من أبرز الشركات المتخصصة في تصميم وتصنيع الأثاث الفندقي والمكتبي والسكني، واضعة نصب أعينها تحقيق التوازن بين الجمال الوظيفي والجودة العالية.</p>
+              <h2>الرؤية :</h2>
+              <p>أن نكون الخيار الأول للفنادق والمشروعات العقارية في مجال تأثيث المساحات الداخلية.</p>
+              <h2>الرسالة:</h2>
+              <p>تقديم منتجات تجمع بين التصميم العصري والجودة الفائقة، مع الالتزام بالمواعيد والدقة في التنفيذ.</p>
+              <h2>الخبرات والإنجازات :</h2>
+              <p>قمنا بتنفيذ مشاريع متعددة لفنادق راقية وشقق فندقية، مع تقديم تصاميم مخصصة تلائم هوية كل عميل.</p>
+              <h2>القيم الأساسية :</h2>
+              <ul>
+                <li>الجودة أولاً</li>
+                <li>الابتكار في التصميم</li>
+                <li>الاحترافية في التنفيذ</li>
+                <li>الالتزام بالمواعيد</li>
+              </ul>
+              <h2>فريق العمل :</h2>
+              <p>يضم فريقنا نخبة من المصممين والمهندسين والفنيين ذوي الخبرة العالية في مجال الأثاث الفندقي.</p>
+              <div class="page-footer">صفحة 3</div>
+            </div>
+          </div>
+          
+          <div class="page">
+            <div class="content-box">
+              <h1>وصف التصميم</h1>
+              <p style="font-size: 12pt; line-height: 1.7;">${data.designDescription}</p>
+              <h2>المواد والجودة</h2>
+              <ul>
+                <li><b>الأخشاب:</b> استخدام الخشب المتين والخشب المطلي في معظم القطع كالهياكل الطاولات، والدواليب.</li>
+                <li><b>الأقمشة:</b> الاعتماد على قماش المخمل الفاخر في تنجيد الكنب والكراسي، مما يمنح إحساسًا بالراحة والفخامة.</li>
+                <li><b>المعادن:</b> استخدام المعدن في أرجل كراسي وطاولات المطعم لضمان الثبات والمتانة.</li>
+                <li><b>المواد الأخرى:</b> دمج أسطح الرخام في قطع مميزة بمنطقة الاستقبال، بالإضافة إلى الزجاج والفيبرجلاس.</li>
+                <li><b>خيارات التخصيص:</b> بناءً على المواصفات، يمكن تعديل المقاسات أو التشطيبات لتتناسب بشكل دقيق مع متطلبات كل مساحة في الفندق.</li>
+              </ul>
+              <div class="page-footer">صفحة 4</div>
+            </div>
+          </div>
+          
+          
+          ${itemsHtml}
+          
+          <div class="page">
+            <div class="content-box">
+              <h1>الجدول الزمني وشروط العقد</h1>
+              <h2>الجدول الزمني</h2>
+              <table class="timeline-table">
+                <thead>
+                  <tr><th>المرحلة</th><th>المدة</th><th>الملاحظات</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>تصميم وتنفيذ العينات</td><td>10 أيام</td><td>بعد اعتماد العرض</td></tr>
+                  <tr><td>التصنيع الكامل</td><td>30 يوما</td><td>في مصنعنا الرئيسي</td></tr>
+                  <tr><td>النقل والتركيب</td><td>5 أيام</td><td>في موقع الفندق</td></tr>
+                  <tr class="total-row"><td>إجمالي المدة التقديرية</td><td>45 يوما عمل</td><td></td></tr>
+                </tbody>
+              </table>
+              <h2>الضمان:</h2>
+              <p>ضمان لمدة 5 سنوات كاملة ضد عيوب التصنيع، يشمل الصيانة والإصلاح دون تكلفة. لا يشمل سوء الاستخدام.</p>
+              <h2>صلاحية العرض:</h2>
+              <p>هذا العرض ساري لمدة 30 يوما من تاريخ صدوره.</p>
+              <div class="page-footer">صفحة ${currentPageNumber}</div>
+            </div>
+          </div>
+
+          <div class="page">
+            <div class="content-box">
+              <h1>الخاتمة</h1>
+              <p>نشكركم على وقتكم واهتمامكم، ونحن على استعداد تام لمناقشة العرض بالتفصيل والإجابة على أي استفسارات.</p>
+              <h2>للتواصل</h2>
+              <ul>
+                <li>الهاتف: 0544976640</li>
+                <li>البريد الإلكتروني: sales@ukra.sa</li>
+                <li>العنوان: سلطانة - المدينة المنورة</li>
+              </ul>
+              <h2>دعوة للعمل:</h2>
+              <p>لترتيب اجتماع أو زيارة ميدانية، يرجى التواصل معنا في أي وقت. نحن بانتظار تعاون مثمر وبناء.</p>
+              <div class="footer-section">
+                <h2>معلومات التحويل البنكي</h2>
+                <p>${data.bankDetails}</p>
+              </div>
+              <div class="page-footer">صفحة ${currentPageNumber + 1}</div>
+            </div>
+          </div>
+          
+        </body>
+        </html>
+      `;
+      
+      // 5. فتح النافذة الجديدة وكتابة الـ HTML
+      const previewWindow = window.open('', '_blank');
+      previewWindow.document.write(previewHtml);
+      previewWindow.document.close();
+      
+      showLoader(false);
+      showStatus('تم إنشاء المعاينة بنجاح.', 'success');
+    }
+
+    // ================== دوال مساعدة ==================
+
+    function showLoader(show, message = 'جاري التحميل...') {
+      loader.innerText = message;
+      loader.style.display = show ? 'flex' : 'none';
+      if (show) {
+        statusMsg.style.display = 'none';
+      }
+    }
+    
+    function showStatus(message, type) {
+      statusMsg.innerText = message;
+      statusMsg.className = (type === 'success') ? 'status-success' : 'status-error';
+      statusMsg.style.display = 'block';
+    }
+    
+    function onDataFailed(message) {
+      showLoader(false);
+      showStatus(message, 'error');
+      console.error(message);
+    }
+    
+    // ===============================================
+    // == دوال الذكاء الاصطناعي (Gemini)
+    // ===============================================
+
+    /**
+     * دالة مركزية لاستدعاء Gemini API عبر Google Apps Script
+     * @param {string} prompt - موجه الأوامر (الطلب)
+     * @param {string} loaderMessage - رسالة التحميل
+     * @returns {Promise<string>} - الإجابة النصية من Gemini
+     */
+    async function callGemini(prompt, loaderMessage = 'جاري التفكير...') {
+      showLoader(true, loaderMessage);
+      
+      try {
+        const response = await fetch(GAS_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'callGemini', // هذا هو المفتاح الذي أضفناه في doPost
+            prompt: prompt
+          }),
+          headers: { 'Content-Type': 'application/json' },
+          mode: 'cors'
+        });
+
+        if (!response.ok) {
+          throw new Error(`خطأ في الشبكة: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+
+        if (result.status === 'error') {
+          throw new Error(result.message);
+        }
+
+        // إرجاع النص الصافي من Gemini
+        return result.text; 
+
+      } catch (error) {
+        showLoader(false);
+        showStatus('فشل استدعاء الذكاء الاصطناعي: ' + error.message, 'error');
+        console.error("Gemini Call Error:", error);
+        return null; // إرجاع null عند الفشل
+      }
+      // (ملاحظة: showLoader(false) سيتم استدعاؤها من الدالة الأصلية)
+    }
+
+    /**
+     * الدالة الرئيسية لإنشاء اختيارات البنود بالذكاء الاصطناعي
+     * @param {string} type - نوع الطلب (مثل 'economy_room')
+     */
+    async function generateAiSelection(type) {
+      if (MASTER_ITEMS_LIST.length === 0) {
+        alert('قائمة البنود الرئيسية لم تكتمل. يرجى الانتظار أو إعادة تحميل الصفحة.');
+        return;
+      }
+
+      // 1. إنشاء موجه الأوامر (Prompt)
+      let requestText = '';
+      if (type === 'economy_room') {
+        requestText = 'غرفة نوم فندقية اقتصادية (مستوى سعر price_low)';
+      } else if (type === 'medium_room') {
+        requestText = 'غرفة نوم فندقية بجودة متوسطة (مستوى سعر price_medium)';
+      } else if (type === 'luxury_reception') {
+        requestText = 'استقبال فندقي فاخر (مستوى سعر price_high)';
+      }
+      
+      // تحويل قائمة البنود إلى نص مبسط لـ Gemini
+      const itemsListForPrompt = MASTER_ITEMS_LIST.map(item => {
+        return `- ID: ${item.id}, الاسم: ${item.name}, الوصف: ${item.description}, السعر المنخفض: ${item.price_low}, السعر المتوسط: ${item.price_medium}, السعر المرتفع: ${item.price_high}`;
+      }).join('\n');
+
+      const fullPrompt = `
+        مهمتك هي اختيار بنود لإنشاء عرض سعر فندقي.
+        
+        الطلب: ${requestText}
+
+        قائمة البنود المتاحة (Master List):
+        ${itemsListForPrompt}
+        
+        التعليمات:
+        1.  اقرأ "الطلب" جيداً.
+        2.  اختر البنود "الأساسية" والمناسبة للطلب من "قائمة البنود المتاحة". (مثال: الغرفة تحتاج سرير، دولاب، طاولة جانبية).
+        3.  حدد الكمية (qty) المناسبة لكل بند (عادة 1 أو 2 للغرفة).
+        4.  أعد الرد **فقط** بصيغة JSON Array، بدون أي نصوص إضافية.
+        5.  يجب أن يكون الـ JSON بهذا الشكل: [{"id": "ID_من_القائمة", "qty": العدد}, ...]
+        
+        مثال للرد (لا تضعه في إجابتك): [{"id": "item_12", "qty": 1}, {"id": "item_45", "qty": 2}]
+      `;
+
+      // 2. استدعاء Gemini
+      const geminiResponseText = await callGemini(fullPrompt, `جاري إنشاء "${requestText}"...`);
+      
+      if (!geminiResponseText) {
+        showLoader(false);
+        return; // توقف إذا فشل الاستدعاء
+      }
+
+      // 3. معالجة الرد
+      try {
+        let itemsToAdd = JSON.parse(geminiResponseText);
+        
+        // أحياناً يضيف Gemini الـ JSON داخل ```json ... ```
+        if (typeof itemsToAdd !== 'object') {
+           itemsToAdd = JSON.parse(geminiResponseText.replace(/```json\n|```/g, ''));
+        }
+
+        if (!Array.isArray(itemsToAdd)) {
+           throw new Error('الرد ليس بصيغة Array.');
+        }
+
+        // 4. إضافة البنود للجدول
+        let itemsAddedCount = 0;
+        itemsToAdd.forEach(aiItem => {
+          const itemData = MASTER_ITEMS_LIST.find(masterItem => masterItem.id === aiItem.id);
+          const priceLevel = document.getElementById('priceLevel').value; // استخدام مستوى السعر الحالي
+          
+          if (itemData) {
+            const unitPrice = itemData[priceLevel] || 0;
+            addQuoteItem({
+              category: itemData.category,
+              name: itemData.name,
+              description: itemData.description,
+              quantity: aiItem.qty || 1,
+              unitPrice: unitPrice,
+              totalPrice: (aiItem.qty || 1) * unitPrice
+            });
+            itemsAddedCount++;
+          }
+        });
+
+        updateGrandTotal();
+        saveDraft(); // حفظ المسودة
+        showLoader(false);
+        showStatus(`تمت إضافة ${itemsAddedCount} بنود بنجاح.`, 'success');
+
+      } catch (e) {
+        showLoader(false);
+        showStatus('فشل في فهم رد الذكاء الاصطناعي: ' + e.message, 'error');
+        console.error("Gemini Response Parse Error:", geminiResponseText);
+      }
+    }
+  </script>
+</body>
+</html>
